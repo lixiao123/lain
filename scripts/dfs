@@ -61,7 +61,8 @@ esac
 # -------------------------------------------------------------------------
 #   Grabbing "df" result
 # -------------------------------------------------------------------------
-DF_RESULT=`$DF_COMMAND`
+#DF_RESULT=`$DF_COMMAND`
+DF_RESULT=`/bin/df -k|sed -n '1,2p;6,$p'`
 if [ ! -z $DEBUG ]; then
 echo "--> DF_RESULT:"
 echo "$DF_RESULT"
