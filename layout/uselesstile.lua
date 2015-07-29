@@ -1,12 +1,12 @@
 
 --[[
-
-     Licensed under GNU General Public License v2
-      * (c) 2014       projektile, worron
-      * (c) 2013       Luke Bonham
-      * (c) 2009       Donald Ephraim Curtis
-      * (c) 2008       Julien Danjolu
-
+                                                  
+     Licensed under GNU General Public License v2 
+      * (c) 2014, projektile, worron              
+      * (c) 2013, Luke Bonham                     
+      * (c) 2009, Donald Ephraim Curtis           
+      * (c) 2008, Julien Danjolu                  
+                                                  
 --]]
 
 local tag       = require("awful.tag")
@@ -30,6 +30,7 @@ local function flip(canvas, geometry)
         height = geometry.height
     }
 end
+<<<<<<< HEAD
 
 local function swap(geometry)
     return { x = geometry.y, y = geometry.x, width = geometry.height, height = geometry.width }
@@ -72,6 +73,70 @@ local function tile_column(canvas, area, list, useless_gap, transformation)
 
         -- useless gap and border correction
         size_correction(c, g, useless_gap)
+=======
+
+local function swap(geometry)
+    return { x = geometry.y, y = geometry.x, width = geometry.height, height = geometry.width }
+end
+
+-- Find geometry for secondary windows column
+local function cut_column(wa, n, index)
+    local width = wa.width / n
+    local area = { x = wa.x + (index - 1) * width, y = wa.y, width = width, height = wa.height }
+
+    return area
+end
+
+-- Find geometry for certain window in column
+local function cut_row(wa, factor, index, used)
+    local height = wa.height * factor.window[index] / factor.total
+    local area = { x = wa.x, y = wa.y + used, width = wa.width, height = height }
+
+    return area
+end
+
+-- Client geometry correction depending on useless gap and window border
+local function size_correction(c, geometry, useless_gap)
+    geometry.width  = math.max(geometry.width  - 2 * c.border_width - useless_gap, 1)
+    geometry.height = math.max(geometry.height - 2 * c.border_width - useless_gap, 1)
+    geometry.x = geometry.x + useless_gap / 2
+    geometry.y = geometry.y + useless_gap / 2
+end
+
+-- Check size factor for group of clients and calculate total
+local function calc_factor(n, winfactors)
+    local factor = { window = winfactors, total = 0, min = 1 }
+
+    for i = 1, n do
+        if not factor.window[i] then
+            factor.window[i] = factor.min
+        else
+            factor.min = math.min(factor.window[i], factor.min)
+            if factor.window[i] < 0.05 then factor.window[i] = 0.05 end
+        end
+        factor.total = factor.total + factor.window[i]
+    end
+
+    return factor
+end
+
+-- Tile group of clients in given area
+-- @canvas need for proper transformation only
+-- @winfactors table with clients size factors
+local function tile_column(canvas, area, list, useless_gap, transformation, winfactors)
+    local used = 0
+    local factor = calc_factor(#list, winfactors)
+
+    for i, c in ipairs(list) do
+        local g = cut_row(area, factor, i, used)
+        used = used + g.height
+
+        -- swap workarea dimensions
+        if transformation.flip then g = flip(canvas, g) end
+        if transformation.swap then g = swap(g) end
+
+        -- useless gap and border correction
+        size_correction(c, g, useless_gap)
 
         c:geometry(g)
     end
@@ -102,12 +167,54 @@ local function tile(p, orientation)
         mwfact = 1
     end
 
+    -- clients size factor
+    local data = tag.getdata(t).windowfact
+>>>>>>> upstream/master
+
+        c:geometry(g)
+    end
+end
+
+--Main tile function
+local function tile(p, orientation)
+
+<<<<<<< HEAD
+    -- Theme vars
+    local useless_gap = beautiful.useless_gap_width or 0
+    local global_border = beautiful.global_border_width or 0
+
+    -- Aliases
+    local wa = p.workarea
+    local cls = p.clients
+    local t = tag.selected(p.screen)
+
+    -- Nothing to tile here
+    if #cls == 0 then return end
+
+    -- Get tag prop
+    local nmaster = math.min(tag.getnmaster(t), #cls)
+    local mwfact = tag.getmwfact(t)
+
+    if nmaster == 0 then
+        mwfact = 0
+    elseif nmaster == #cls then
+        mwfact = 1
+    end
+
     -- Workarea size correction depending on useless gap and global border
     wa.height = wa.height - 2 * global_border - useless_gap
     wa.width  = wa.width -  2 * global_border - useless_gap
     wa.x = wa.x + useless_gap / 2 + global_border
     wa.y = wa.y + useless_gap / 2 + global_border
 
+=======
+    -- Workarea size correction depending on useless gap and global border
+    wa.height = wa.height - 2 * global_border - useless_gap
+    wa.width  = wa.width -  2 * global_border - useless_gap
+    wa.x = wa.x + useless_gap / 2 + global_border
+    wa.y = wa.y + useless_gap / 2 + global_border
+
+>>>>>>> upstream/master
     -- Find which transformation we need for given orientation
     local transformation = {
         swap = orientation == 'top' or orientation == 'bottom',
@@ -116,10 +223,17 @@ local function tile(p, orientation)
 
     -- Swap workarea dimensions if orientation vertical
     if transformation.swap then wa = swap(wa) end
+<<<<<<< HEAD
 
     -- Split master and other windows
     local cls_master, cls_other = {}, {}
 
+=======
+
+    -- Split master and other windows
+    local cls_master, cls_other = {}, {}
+
+>>>>>>> upstream/master
     for i, c in ipairs(cls) do
         if i <= nmaster then
             table.insert(cls_master, c)
@@ -136,7 +250,12 @@ local function tile(p, orientation)
         height = wa.height
     }
 
+<<<<<<< HEAD
     tile_column(wa, master_area, cls_master, useless_gap, transformation)
+=======
+    if not data[0] then data[0] = {} end
+    tile_column(wa, master_area, cls_master, useless_gap, transformation, data[0])
+>>>>>>> upstream/master
 
     -- Tile other windows
     local other_area = {
@@ -149,6 +268,11 @@ local function tile(p, orientation)
     -- get column number for other windows
     local ncol = math.min(tag.getncol(t), #cls_other)
 
+<<<<<<< HEAD
+=======
+    if ncol == 0 then ncol = 1 end
+
+>>>>>>> upstream/master
     -- split other windows to column groups
     local last_small_column = ncol - #cls_other % ncol
     local rows_min = math.floor(#cls_other / ncol)
@@ -163,10 +287,19 @@ local function tile(p, orientation)
             table.insert(column, cls_other[client_index])
             client_index = client_index + 1
         end
+<<<<<<< HEAD
 
 		-- and tile
 		local column_area = cut_area(other_area, ncol, position, true)
         tile_column(wa, column_area, column, useless_gap, transformation)
+=======
+
+        -- and tile
+        local column_area = cut_column(other_area, ncol, position)
+
+        if not data[i] then data[i] = {} end
+        tile_column(wa, column_area, column, useless_gap, transformation, data[i])
+>>>>>>> upstream/master
     end
 end
 

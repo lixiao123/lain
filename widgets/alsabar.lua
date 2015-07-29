@@ -26,7 +26,7 @@ local setmetatable = setmetatable
 -- lain.widgets.alsabar
 local alsabar = {
     channel = "Master",
-    step    = "5%",
+    step    = "2%",
 
     colors = {
         background = beautiful.bg_normal,
@@ -55,7 +55,7 @@ function alsabar.notify()
     local preset = {
         title   = "",
         text    = "",
-        timeout = 4,
+        timeout = 5,
         screen  = alsabar.notifications.screen,
         font    = alsabar.notifications.font .. " " ..
                   alsabar.notifications.font_size,
@@ -88,18 +88,19 @@ function alsabar.notify()
 end
 
 local function worker(args)
-    local args = args or {}
-    local timeout = args.timeout or 4
-    local settings = args.settings or function() end
-    local width = args.width or 63
-    local height = args.heigth or 1
-    local ticks = args.ticks or false
+    local args       = args or {}
+    local timeout    = args.timeout or 5
+    local settings   = args.settings or function() end
+    local width      = args.width or 63
+    local height     = args.heigth or 1
+    local ticks      = args.ticks or false
     local ticks_size = args.ticks_size or 7
-    local vertical = args.vertical or false
+    local vertical   = args.vertical or false
 
-    alsabar.channel = args.channel or alsabar.channel
-    alsabar.step = args.step or alsabar.step
-    alsabar.colors = args.colors or alsabar.colors
+    alsabar.cmd           = args.cmd or "amixer"
+    alsabar.channel       = args.channel or alsabar.channel
+    alsabar.step          = args.step or alsabar.step
+    alsabar.colors        = args.colors or alsabar.colors
     alsabar.notifications = args.notifications or alsabar.notifications
 
     alsabar.bar = awful.widget.progressbar()
@@ -115,8 +116,8 @@ local function worker(args)
 
     function alsabar.update()
         -- Get mixer control contents
-        local f = io.popen("amixer -M get " .. alsabar.channel)
-        local mixer = f:read("*a")
+        local f = assert(io.popen(string.format("%s get %s", alsabar.cmd, alsabar.channel)))
+        local mixer = f:read("*all")
         f:close()
 
         -- Capture mixer control state:          [5%] ... ... [on]
@@ -129,7 +130,6 @@ local function worker(args)
 
         alsabar._current_level = tonumber(volu)
         alsabar.bar:set_value(alsabar._current_level / 100)
-
         if not mute and tonumber(volu) == 0 or mute == "off"
         then
             alsabar._muted = true
@@ -147,25 +147,27 @@ local function worker(args)
         settings()
     end
 
-    newtimer("alsabar", timeout, alsabar.update)
-
     alsabar.bar:buttons (awful.util.table.join (
           awful.button ({}, 1, function()
             awful.util.spawn(alsabar.mixer)
           end),
           awful.button ({}, 3, function()
-            awful.util.spawn(string.format("amixer set %s toggle", alsabar.channel))
+            awful.util.spawn(string.format("%s set %s toggle", alsabar.cmd, alsabar.channel))
             alsabar.update()
           end),
           awful.button ({}, 4, function()
-            awful.util.spawn(string.format("amixer set %s %s+", alsabar.channel, alsabar.step))
+            awful.util.spawn(string.format("%s set %s %s+", alsabar.cmd, alsabar.channel, alsabar.step))
             alsabar.update()
           end),
           awful.button ({}, 5, function()
-            awful.util.spawn(string.format("amixer set %s %s-", alsabar.channel, alsabar.step))
+            awful.util.spawn(string.format("%s set %s %s-", alsabar.cmd, alsabar.channel, alsabar.step))
             alsabar.update()
           end)
     ))
+
+    timer_id = string.format("alsabar-%s-%s", alsabar.cmd, alsabar.channel)
+
+    newtimer(timer_id, timeout, alsabar.update)
 
     return alsabar
 end

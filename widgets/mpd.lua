@@ -14,10 +14,11 @@ local escape_f     = require("awful.util").escape
 local naughty      = require("naughty")
 local wibox        = require("wibox")
 
-local io           = { popen    = io.popen }
 local os           = { execute  = os.execute,
                        getenv   = os.getenv }
+local math         = { floor    = math.floor }
 local string       = { format   = string.format,
+                       match    = string.match,
                        gmatch   = string.gmatch }
 
 local setmetatable = setmetatable
@@ -39,7 +40,7 @@ local function worker(args)
 
     local mpdcover = helpers.scripts_dir .. "mpdcover"
     local mpdh = "telnet://" .. host .. ":" .. port
-    local echo = "echo 'password " .. password .. "\nstatus\ncurrentsong\nclose'"
+    local echo = "echo -e 'password " .. password .. "\nstatus\ncurrentsong\nclose'"
 
     mpd.widget = wibox.widget.textbox('')
 
@@ -72,7 +73,7 @@ local function worker(args)
                     elseif k == "Album"   then mpd_now.album   = escape_f(v)
                     elseif k == "Date"    then mpd_now.date    = escape_f(v)
                     elseif k == "Time"    then mpd_now.time    = v
-                    elseif k == "elapsed" then mpd_now.elapsed = math.floor(v)
+                    elseif k == "elapsed" then mpd_now.elapsed = string.match(v, "%d+")
                     end
                 end
             end
@@ -88,12 +89,18 @@ local function worker(args)
                 then
                     helpers.set_map("current mpd track", mpd_now.title)
 
-                    os.execute(string.format("%s %q %q %d %q", mpdcover, music_dir,
-                               mpd_now.file, cover_size, default_art))
+                    if string.match(mpd_now.file, "http.*://") == nil
+                    then -- local file
+                        os.execute(string.format("%s %q %q %d %q", mpdcover, music_dir,
+                                   mpd_now.file, cover_size, default_art))
+                        current_icon = "/tmp/mpdcover.png"
+                    else -- http stream
+                        current_icon = default_art
+                    end
 
                     mpd.id = naughty.notify({
                         preset = mpd_notification_preset,
-                        icon = "/tmp/mpdcover.png",
+                        icon = current_icon,
                         replaces_id = mpd.id,
                     }).id
                 end

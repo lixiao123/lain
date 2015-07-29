@@ -13,9 +13,7 @@ local wibox           = require("wibox")
 
 local io              = { lines  = io.lines }
 local math            = { floor  = math.floor }
-local string          = { format = string.format,
-                          gmatch = string.gmatch,
-                          len    = string.len }
+local string          = { gmatch = string.gmatch }
 
 local setmetatable    = setmetatable
 
@@ -25,7 +23,7 @@ local mem = {}
 
 local function worker(args)
     local args     = args or {}
-    local timeout  = args.timeout or 3
+    local timeout  = args.timeout or 2
     local settings = args.settings or function() end
 
     mem.widget = wibox.widget.textbox('')

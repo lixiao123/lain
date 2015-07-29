@@ -31,7 +31,7 @@ function task:hide()
     end
 end
 
-function task:show()
+function task:show(scr_pos)
     task:hide()
 
     local f, c_text
@@ -51,6 +51,7 @@ function task:show()
                                          fg = task.fg,
                                          bg = task.bg,
                                          timeout = task.timeout,
+                                         screen = scr_pos or 1
                                      })
 end
 
@@ -59,7 +60,7 @@ function task:prompt_add()
       mypromptbox[mouse.screen].widget,
       function (...)
           local f = io.popen("task add " .. ...)
-          c_text = "\n<span font='" 
+          c_text = "\n<span font='"
                    .. task.font .. " "
                    .. task.font_size .. "'>"
                    .. f:read("*all")
@@ -94,7 +95,7 @@ function task:prompt_search()
               c_text = "<span font='"
                        .. task.font .. " "
                        .. task.font_size .. "'>"
-                       .. c_text 
+                       .. c_text
                        .. "</span>"
           end
 
@@ -106,6 +107,7 @@ function task:prompt_search()
               fg       = task.fg,
               bg       = task.bg,
               timeout  = task.timeout,
+              screen   = mouse.screen
           })
       end,
       nil,
@@ -122,11 +124,12 @@ function task:attach(widget, args)
     task.bg        = args.bg or beautiful.bg_normal or "#FFFFFF"
     task.position  = args.position or "top_right"
     task.timeout   = args.timeout or 7
+    task.scr_pos   = args.scr_pos or 1
 
     task.notify_icon = icons_dir .. "/taskwarrior/task.png"
     task.notify_icon_small = icons_dir .. "/taskwarrior/tasksmall.png"
 
-    widget:connect_signal("mouse::enter", function () task:show() end)
+    widget:connect_signal("mouse::enter", function () task:show(scr_pos) end)
     widget:connect_signal("mouse::leave", function () task:hide() end)
 end
 

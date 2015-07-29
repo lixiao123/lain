@@ -144,7 +144,7 @@ local function worker(args)
         end
     end
 
-    newtimer("bat", timeout, update)
+    newtimer(battery, timeout, update)
 
     return bat.widget
 end

@@ -10,10 +10,8 @@
 -- How to use...
 -- ...asynchronously:
 -- asyncshell.request('wscript -Kiev', function(f) wwidget.text = f:read("*l") end)
--- ...synchronously
+-- ...synchronously:
 -- widget:set_text(asyncshell.demand('wscript -Kiev', 5):read("*l") or "Error")
-
--- This is more cpu demanding, but makes things faster.
 
 local spawn = require('awful.util').spawn
 
@@ -44,8 +42,7 @@ function asyncshell.request(command, callback)
       string.format("sh -c '%s > %s; " ..
                     'echo "asyncshell.deliver(%s)" | ' ..
                     "awesome-client' 2> /dev/null",
-                    string.gsub(command, "'", "'\\''"), tmpfname,
-                    id, tmpfname)
+                    string.gsub(command, "'", "'\\''"), tmpfname, id)
    spawn(req, false)
    return id
 end

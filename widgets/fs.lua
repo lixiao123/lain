@@ -36,17 +36,18 @@ function fs:hide()
     end
 end
 
-function fs:show(t_out)
+function fs:show(t_out, scr)
     fs:hide()
 
     local f = io.popen(helpers.scripts_dir .. "dfs")
-    ws = f:read("*a"):gsub("\n*$", "")
+    ws = f:read("*all"):gsub("\n*$", "")
     f:close()
 
     notification = naughty.notify({
-        preset = fs_notification_preset,
-        text = ws,
+        preset  = fs_notification_preset,
+        text    = ws,
         timeout = t_out,
+        screen  = scr or 1
     })
 end
 
@@ -61,12 +62,12 @@ local function worker(args)
 
     fs.widget = wibox.widget.textbox('')
 
-    helpers.set_map("fs", false)
+    helpers.set_map(partition, false)
 
     function update()
         fs_info = {}
         fs_now  = {}
-        local f = io.popen("LC_ALL=C df -kP " .. partition)
+        local f = assert(io.popen("LC_ALL=C df -kP"))
 
         for line in f:lines() do -- Match: (size) (used)(avail)(use%) (mount)
             local s     = string.match(line, "^.-[%s]([%d]+)")
@@ -91,7 +92,7 @@ local function worker(args)
         widget = fs.widget
         settings()
 
-        if fs_now.used >= 99 and not helpers.get_map("fs")
+        if fs_now.used >= 99 and not helpers.get_map(partition)
         then
             naughty.notify({
                 title = "warning",
@@ -100,16 +101,16 @@ local function worker(args)
                 fg = "#000000",
                 bg = "#FFFFFF",
             })
-            helpers.set_map("fs", true)
+            helpers.set_map(partition, true)
         else
-            helpers.set_map("fs", false)
+            helpers.set_map(partition, false)
         end
     end
 
-    helpers.newtimer(partition, timeout, update)
+    fs.widget:connect_signal('mouse::enter', function () fs:show(0, mouse.screen) end)
+    fs.widget:connect_signal('mouse::leave', function () fs:hide() end)
 
-    widget:connect_signal('mouse::enter', function () fs:show(0) end)
-    widget:connect_signal('mouse::leave', function () fs:hide() end)
+    helpers.newtimer(partition, timeout, update)
 
     return setmetatable(fs, { __index = fs.widget })
 end

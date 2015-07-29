@@ -1,12 +1,12 @@
 
 --[[
-
-     Licensed under GNU General Public License v2
-      * (c) 2014,      projektile, worron
-      * (c) 2013,      Luke Bonham
-      * (c) 2012,      Josh Komoroske
-      * (c) 2010-2012, Peter Hofmann
-
+                                                  
+     Licensed under GNU General Public License v2 
+      * (c) 2014,      projektile, worron         
+      * (c) 2013,      Luke Bonham                
+      * (c) 2012,      Josh Komoroske             
+      * (c) 2010-2012, Peter Hofmann              
+                                                  
 --]]
 
 local beautiful = require("beautiful")
@@ -20,6 +20,7 @@ local uselessfair = {}
 local function swap(geometry)
     return { x = geometry.y, y = geometry.x, width = geometry.height, height = geometry.width }
 end
+<<<<<<< HEAD
 
 -- Client geometry correction depending on useless gap and window border
 local function size_correction(c, geometry, useless_gap)
@@ -29,6 +30,17 @@ local function size_correction(c, geometry, useless_gap)
     geometry.y = geometry.y + useless_gap / 2
 end
 
+=======
+
+-- Client geometry correction depending on useless gap and window border
+local function size_correction(c, geometry, useless_gap)
+    geometry.width  = math.max(geometry.width  - 2 * c.border_width - useless_gap, 1)
+    geometry.height = math.max(geometry.height - 2 * c.border_width - useless_gap, 1)
+    geometry.x = geometry.x + useless_gap / 2
+    geometry.y = geometry.y + useless_gap / 2
+end
+
+>>>>>>> upstream/master
 -- Main tiling function
 local function fair(p, orientation)
 
